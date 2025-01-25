@@ -3,9 +3,10 @@ import "dotenv/config";
 import cors from "cors";
 import express from "express";
 import { notFound } from "./controllers/notFoundController";
-import testRoutes from "./routes/exampleRoutes";
-import { helloMiddleware } from "./middleware/exampleMiddleware";
+import todosRoutes from "./routes/todosRoutes";
 import mongoose from "mongoose";
+import { specs } from "./swagger";
+import swaggerUi from "swagger-ui-express";
 
 // Variables
 const app = express();
@@ -16,12 +17,16 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use("/api", helloMiddleware, testRoutes);
+app.use("/api/todos", todosRoutes);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 app.all("*", notFound);
 
 // Database connection
 try {
-  await mongoose.connect(process.env.MONGO_URI!);
+  if(!process.env.MONGO_URI) {
+    throw new Error("MONGO_URI is not defined in .env file");
+  }
+  await mongoose.connect(process.env.MONGO_URI);
   console.log("Database connection OK");
 } catch (err) {
   console.error(err);
